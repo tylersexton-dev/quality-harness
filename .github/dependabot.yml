@@ -5,6 +5,8 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     groups:
       actions:
         patterns: ['*']
@@ -12,7 +14,15 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # Only propose releases at least a week old: hijacked releases are usually caught and pulled
+    # within days, so a compromised version never reaches the harness.
+    cooldown:
+      default-days: 7
     ignore:
+      # TypeScript minors can break, and typescript-eslint supports only TypeScript < 6.1 today:
+      # TypeScript moves deliberately, together with typescript-eslint, never automatically.
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
       # Node's type definitions follow the oldest Node the harness supports, not the newest;
       # a major bump would let code use APIs that don't exist on Node 20.
       - dependency-name: '@types/node'

@@ -30,7 +30,8 @@ Enforced by `test/security.test.mjs`, so none of these can quietly regress:
   branch, so a later push to the harness reaches a project only when it upgrades on purpose.
 - **Dependencies are exact versions**, so a compromised new release of ESLint, TypeScript or
   typescript-eslint is never pulled in without a reviewed update. Dependabot proposes updates
-  weekly as PRs.
+  weekly as PRs, and only for releases at least 7 days old, so a hijacked release that gets
+  pulled within days never reaches the harness.
 - **Every GitHub Action is pinned to a full commit SHA**, in this repo's workflows and in the one
   `init` writes into projects. A tag can be moved to other code; a commit can't. Dependabot
   keeps the pins current.

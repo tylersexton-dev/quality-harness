@@ -43,7 +43,7 @@ six stages, each with evals and a checkpoint, instead of one shot.
 | 2 | The hook in a real Claude Code session on Tyler's Mac | Agent writes slop → hook blocks → agent fixes; feels helpful, < 10 s | Tyler: helpful or annoying? | Done: 5/5 prompts, S1–S5 pass; Tyler's ratings pending |
 | 3 | Two differently shaped projects: Prism and AgentFlow | init + baseline + check with no harness code changes | Review baseline + tweaks | Done: 12/12 after 7 fixes (it needed code changes, which was the point of looking) |
 | 4 | Tests and docs for the harness itself | Unit tests (ratchet, init, hook); harness passes its own check; README | Review README | Done: 54 tests, 14/14 mutations caught, self-check baseline 0, Node 20 + 22 |
-| 5 | Publish to `tylersexton-dev/quality-harness` | Fresh install from GitHub works in a clean folder and in CI | Tyler: public or private | Public, by Tyler's call. Audit and hardening done; waiting on the empty repo |
+| 5 | Publish to `tylersexton-dev/quality-harness` | Fresh install from GitHub works in a clean folder and in CI | Tyler: public or private | Published, public. CI green on Node 20.19/22/24, CodeQL clean, installs from GitHub; Tyler cuts the v0.1.0 release |
 | 6 | Roll out per project | Each project: init, baseline, check green, PR check green | work repos only after their owners OK the CI change | |
 
 ## Stage 1: prove the core (Nov 16)
@@ -331,6 +331,28 @@ The entry comes out when picomatch ships a fix.
 **Totals:** 60 unit tests, the self-check is clean, and the Stage 2 evals pass 5/5 on the final
 package.
 
+**Published** (Nov 17): https://github.com/tylersexton-dev/quality-harness
+
+- **First push:** CI green on Node 20.19, 22 and 24 (self-check, 60 tests, packed install into a
+  blank project). CodeQL security-extended found nothing.
+- **Installed from GitHub into a blank project:** install (11 s), `init` (11 steps), `baseline`
+  (0 problems), a clean `check`, then a planted `any` caught.
+- **Secret scanning with push protection** was already on (GitHub's default for public repos).
+- **Dependabot worked on the first run, and its first PR showed two config gaps:**
+  1. It proposed `@types/node` 24 → 26. Types newer than the oldest supported Node (20) would
+     let code call APIs that don't exist there, so major `@types/node` bumps are now ignored.
+  2. Its npm job failed trying to move TypeScript past 6.0, which typescript-eslint doesn't
+     support yet. TypeScript now moves by hand, together with typescript-eslint; only patches are
+     automatic.
+  The same log showed Dependabot skipping releases newer than 3 days. That's a strong defense
+  (hijacked releases are usually pulled within days), so it's now explicit: 7 days.
+- **This session can't create tags, releases or repo settings,** so Tyler does those:
+  - the v0.1.0 release
+  - rulesets protecting `main` (PR + passing checks) and `v*` tags
+  - private vulnerability reporting
+  - Dependabot alerts and security updates
+
+
 ## Decisions log
 
 | Date | Decision | Why |
@@ -353,4 +375,5 @@ package.
 | Nov 17 | Tests are proven by mutation, not by passing | A test that can't fail proves nothing; 14 deliberate breakages, all caught. |
 | Nov 17 | Public repo | Simplest install for every project and CI; audited first, since public can't be undone. |
 | Nov 17 | Projects pin a release tag | A push to the harness must not reach a project until it chooses to upgrade. |
+| Nov 17 | Dependabot waits 7 days; TypeScript moves by hand | Compromised releases are usually pulled within days; TypeScript minors can break typescript-eslint. |
 | Nov 17 | Accept the picomatch advisory, documented | No fix exists upstream; not reachable through the harness; the suggested downgrade is worse. |
