@@ -5,7 +5,7 @@ lint, a ratchet so existing code isn't buried in old errors, a PR check, and a C
 hook that sends problems back to the agent the moment it writes them.
 
 ```bash
-npm i -D github:tylersexton-dev/quality-harness#v0.1.0
+npm i -D github:tylersexton-dev/quality-harness#v0.1.1
 npx harness init        # wire the project up (safe to re-run)
 npx harness baseline    # accept today's problems; only new ones fail from now on
 npx harness check       # types + lint, no new problems

@@ -1,6 +1,6 @@
 {
   "name": "quality-harness",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Make agent-written TypeScript trustworthy: strict types, strict lint, a ratchet for old code, a Claude Code hook, and a PR check.",
   "type": "module",
   "license": "MIT",
