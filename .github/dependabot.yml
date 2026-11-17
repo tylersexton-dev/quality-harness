@@ -12,6 +12,11 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      # Node's type definitions follow the oldest Node the harness supports, not the newest;
+      # a major bump would let code use APIs that don't exist on Node 20.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
     groups:
       lint-and-types:
         patterns: ['eslint', '@eslint/*', '@eslint-community/*', 'typescript', 'typescript-eslint', 'globals', '@types/node']
