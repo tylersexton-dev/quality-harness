@@ -374,6 +374,15 @@ Reproduced against the published v0.1.0: the fake `.zshrc` got the block.
 them fail, which proves they catch the real bug. 67 tests total, self-check clean. Shipped as
 v0.1.1, with the issue recorded in SECURITY.md.
 
+**Released and verified** (Nov 17):
+- PR #3 merged to `main` (`f3295f6`), with all four required checks green.
+- Tyler published the `v0.1.1` release on that commit; the release has no install-time scripts.
+- A clean install of `#v0.1.1` works (`init`, `baseline`, a planted `any` caught).
+- Against the released code, the symlinked-`CLAUDE.md` attack is refused and the target file is
+  untouched.
+- One process lesson: the release notes were drafted before the tag existed, which made it look
+  as if `#v0.1.1` was published early. From now on, notes name a version only once its tag exists.
+
 ## Decisions log
 
 | Date | Decision | Why |
