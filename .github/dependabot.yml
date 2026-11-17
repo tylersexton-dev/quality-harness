@@ -1,0 +1,17 @@
+# Keeps the pinned actions and exact dependency versions current, through reviewed PRs.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ['*']
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      lint-and-types:
+        patterns: ['eslint', '@eslint/*', '@eslint-community/*', 'typescript', 'typescript-eslint', 'globals', '@types/node']

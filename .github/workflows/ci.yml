@@ -1,0 +1,38 @@
+# The harness checks itself with its own rules and runs its tests on every supported Node.
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20.19', '22', '24']
+    steps:
+      # Actions are pinned to commits: a tag can be moved to other code, a commit can't.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0   # the baseline guard compares with the base branch
+          persist-credentials: false   # don't leave the token where test code could read it
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci --ignore-scripts   # the harness's dependencies need no install scripts
+      - name: The harness on itself (types + lint, baseline never grows)
+        run: node bin/harness.mjs check ${{ github.base_ref && format('--against origin/{0}', github.base_ref) || '' }}
+      - name: Unit tests
+        run: npm test
+      - name: The package installs and runs
+        run: |
+          npm pack --pack-destination /tmp
+          mkdir /tmp/consumer && cd /tmp/consumer
+          npm init -y >/dev/null
+          npm i -D /tmp/quality-harness-*.tgz
+          npx --no-install harness help

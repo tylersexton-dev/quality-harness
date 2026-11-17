@@ -1,0 +1,6 @@
+{
+  "version": 2,
+  "note": "Problems that existed when the harness was added. New ones fail; fix these over time and run `harness baseline` to tighten. Never edit by hand: PR checks fail if it grows.",
+  "total": 0,
+  "counts": {}
+}

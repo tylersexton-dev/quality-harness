@@ -1,0 +1,31 @@
+# quality-harness: every PR must type-check, lint clean (no new problems) and pass tests.
+name: __NAME__
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: __DIR__
+    steps:
+      # Actions are pinned to commits: a tag can be moved to other code, a commit can't.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0   # the baseline guard compares with the base branch
+          persist-credentials: false   # don't leave the token where test code could read it
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          __NODE__
+          cache: npm
+          cache-dependency-path: __LOCK__
+      - run: npm ci
+      - name: Types and lint (no new problems, baseline never grows)
+        run: npx --no-install harness check ${{ github.base_ref && format('--against origin/{0}', github.base_ref) || '' }}
+      - name: Tests
+        run: npx --no-install harness test

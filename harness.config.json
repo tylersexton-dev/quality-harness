@@ -1,0 +1,14 @@
+{
+  "test": "npm test",
+  "boundaries": [
+    {
+      "files": ["lib/**", "config/**"],
+      "disallow": ["**/evals/**", "**/test/**", "**/bin/**"],
+      "message": "lib/ and config/ ship to every project; they must not depend on the CLI, tests or evals."
+    }
+  ],
+  "ignore": ["templates/**"],
+  "typeChecked": true,
+  "hook": { "typecheck": true },
+  "rules": {}
+}
