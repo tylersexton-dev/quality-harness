@@ -1,7 +1,7 @@
 // Shared helpers for the stage evals: run the harness, change files for one case, report a table.
 import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 
 /**
  * @typedef {{ code: number | null, out: string, ms: number }} Run
@@ -19,7 +19,9 @@ import { join } from 'node:path';
  */
 export function harness(projectRoot, args, input, cwd = projectRoot) {
   const t0 = Date.now();
-  const r = spawnSync(join(projectRoot, 'node_modules/.bin/harness'), args, { cwd, encoding: 'utf8', input });
+  const r = spawnSync(join(resolve(projectRoot), 'node_modules/.bin/harness'), args, { cwd: resolve(cwd), encoding: 'utf8', input });
+  // A harness that never ran (wrong path, missing install) must fail loudly, not look like a result.
+  if (r.error) throw r.error;
   return { code: r.status, out: `${r.stdout}${r.stderr}`, ms: Date.now() - t0 };
 }
 
@@ -28,7 +30,7 @@ export function harness(projectRoot, args, input, cwd = projectRoot) {
  * @param {string} root
  * @param {string} file  relative to root
  */
-export const hookInput = (root, file) => JSON.stringify({ tool_name: 'Edit', cwd: root, tool_input: { file_path: join(root, file) } });
+export const hookInput = (root, file) => JSON.stringify({ tool_name: 'Edit', cwd: resolve(root), tool_input: { file_path: join(resolve(root), file) } });
 
 /**
  * Run the hook exactly as Claude Code would: the command from the repo's .claude/settings.json,
@@ -42,7 +44,8 @@ export function hookFrom(repo, file) {
   const entry = settings.hooks.PostToolUse.flatMap((g) => g.hooks).find((h) => h.command.includes('harness hook'));
   if (!entry) throw new Error(`no harness hook in ${repo}/.claude/settings.json`);
   const t0 = Date.now();
-  const r = spawnSync('bash', ['-c', entry.command], { cwd: repo, encoding: 'utf8', input: hookInput(repo, file) });
+  const r = spawnSync('bash', ['-c', entry.command], { cwd: resolve(repo), encoding: 'utf8', input: hookInput(resolve(repo), file) });
+  if (r.error) throw r.error;
   return { code: r.status, out: `${r.stdout}${r.stderr}`, ms: Date.now() - t0 };
 }
 

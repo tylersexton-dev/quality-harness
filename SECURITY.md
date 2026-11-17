@@ -21,12 +21,26 @@ trust as your `package.json` scripts:
   written as quoted YAML strings.
 - **`check --against <ref>`** only accepts git refs, never options.
 - Nothing is sent over the network, except what `npm install` fetches.
+- **Symlinks can't redirect the harness's writes.** Everything `init` and `baseline` write
+  into a project goes through `lib/safe-fs.mjs`:
+  - files are opened with `O_NOFOLLOW`, so the OS refuses a symlink
+  - every write must land inside the project or repo
+  - new files are created atomically instead of check-then-write
+  - TypeScript's cache is only allowed inside a real `.harness/` folder
+
+  `test/safe-fs.test.mjs` stages the attacks.
+
+## Fixed
+
+| Version | Issue |
+| --- | --- |
+| 0.1.1 | **Writes followed symlinks** (found by CodeQL as a file-system race, 4 alerts). In 0.1.0, running `harness init` or `harness baseline` in a repo whose `CLAUDE.md`, `package.json`, `.gitignore`, `.claude/`, `.github/` or `.harness/baseline.json` was a symlink wrote through it, for example appending the rules block to `~/.zshrc`. Only an untrusted repo could set this up. Upgrade to 0.1.1. |
 
 ## Supply chain
 
 Enforced by `test/security.test.mjs`, so none of these can quietly regress:
 
-- **Projects install a release tag** (`github:tylersexton-dev/quality-harness#v0.1.0`), never a
+- **Projects install a release tag** (`github:tylersexton-dev/quality-harness#v0.1.1`), never a
   branch, so a later push to the harness reaches a project only when it upgrades on purpose.
 - **Dependencies are exact versions**, so a compromised new release of ESLint, TypeScript or
   typescript-eslint is never pulled in without a reviewed update. Dependabot proposes updates

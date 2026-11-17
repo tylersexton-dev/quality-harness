@@ -353,6 +353,27 @@ package.
   - Dependabot alerts and security updates
 
 
+### The first CodeQL scan found a real vulnerability in v0.1.0 (fixed in v0.1.1)
+
+**Found:** CodeQL flagged four "potential file system race conditions" in `init`: check whether a
+file exists, then write it. Digging in showed something worse than the race. Plain writes
+**follow symlinks**, so a hostile repo whose `CLAUDE.md` was a symlink to `~/.zshrc` would get
+the rules block appended to the user's shell startup file. The same was true of `package.json`,
+`.gitignore`, a symlinked `.claude/` or `.github/` folder, and `.harness/baseline.json`.
+Reproduced against the published v0.1.0: the fake `.zshrc` got the block.
+
+**Fixed** with `lib/safe-fs.mjs`, which every project write now goes through:
+- `O_NOFOLLOW` on every open, so the OS itself refuses a symlink;
+- a check that every write lands inside the project or repo (catches symlinked folders);
+- atomic create-if-missing (`O_EXCL`) in place of check-then-write;
+- reads that refuse symlinks too. A first version still followed one when *reading* the
+  baseline; the test only failed by luck, because `.zshrc` isn't JSON;
+- TypeScript's cache only allowed inside a real `.harness/` folder, otherwise skipped.
+
+**Tests:** 7 new attack tests (`test/safe-fs.test.mjs`). Run against v0.1.0's `init`, three of
+them fail, which proves they catch the real bug. 67 tests total, self-check clean. Shipped as
+v0.1.1, with the issue recorded in SECURITY.md.
+
 ## Decisions log
 
 | Date | Decision | Why |
@@ -376,4 +397,5 @@ package.
 | Nov 17 | Public repo | Simplest install for every project and CI; audited first, since public can't be undone. |
 | Nov 17 | Projects pin a release tag | A push to the harness must not reach a project until it chooses to upgrade. |
 | Nov 17 | Dependabot waits 7 days; TypeScript moves by hand | Compromised releases are usually pulled within days; TypeScript minors can break typescript-eslint. |
+| Nov 17 | Every project write goes through one safe layer | The harness writes into repos it doesn't control; symlinks there must never redirect a write. |
 | Nov 17 | Accept the picomatch advisory, documented | No fix exists upstream; not reachable through the harness; the suggested downgrade is worse. |
